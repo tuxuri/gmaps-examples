@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Google Maps JavaScript API v3 Example: AngularJS</title>
+    <link href="default.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/themes/cupertino/jquery-ui.css" rel="stylesheet" media="screen">
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
+    <script>
+
+    var map;
+    var trafficLayer;
+
+    function initialize() {
+        var mapOptions = {
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        }
+
+        // Using jquery selectors
+        map = new google.maps.Map($('#map-canvas')[0], mapOptions);
+
+        // We don't want to specify the centre of the map nor the zoom.
+        // Just want to make sure these two points are displayed on themap:
+        var bounds = new google.maps.LatLngBounds(
+            new google.maps.LatLng(3.15302, 101.70389),
+            new google.maps.LatLng(3.15791, 101.71195)
+        );
+        map.fitBounds(bounds);
+
+        trafficLayer = new google.maps.TrafficLayer();
+        trafficLayer.setMap(null); // Do not show the traffic layer by default
+
+        // Create the Inforwindow, but don't populate it yet.
+        var infowindow = new google.maps.InfoWindow({});
+
+        var markersData = [
+            {
+                position: [3.15791, 101.71195],
+                title: 'KLCC',
+                content: 'KLCC Petronas Tower'
+            },
+            {
+                position: [3.15302, 101.70389],
+                title: 'KL Tower',
+                content: 'KL Tower'
+            }
+        ];
+        var markers = [];
+        for (var i in markersData) {
+            var ll = markersData[i].position;
+            var m = new google.maps.Marker({
+                position: new google.maps.LatLng(ll[0], ll[1]),
+                map: map,
+                title: markersData[i].title
+            });
+            markers.push(m);
+        }
+
+        function addevent(marker, content) {
+            google.maps.event.addListener(marker, 'click', function() {
+                angular.element($('#form')[0]).scope().place = content;
+                angular.element($('#form')[0]).scope().$apply();
+                infowindow.setContent($('#template').html());
+                infowindow.open(map, marker);
+            });
+        }
+        for (var i in markers) {
+            addevent(markers[i], markersData[i].content);
+        }
+
+        google.maps.event.addListener(map, 'bounds_changed', function() {
+            angular.element($('#form')[0]).scope().bounds_changed();
+        });
+
+        // Detach the traffic button from outside the map and put it inside the
+        // map.
+        var trafficbutton = $('#traffic').detach()[0];
+        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(trafficbutton);
+    }
+
+    // AngularJS controller. Just to demo the communication between
+    // Google Maps and AngularJS's controller
+    function mapController($scope) {
+        $scope.name = 'John Doe';
+        $scope.lat  = '';
+        $scope.lng  = '';
+        $scope.zoom = '';
+
+        $scope.bounds_changed = function() {
+            var ll = map.getCenter();
+            $scope.lat = ll.lat();
+            $scope.lng = ll.lng();
+            $scope.zoom = map.getZoom() * 1;
+            $scope.$apply();
+        }
+
+        $scope.updatemap = function() {
+            map.setZoom($scope.zoom * 1);
+            var ll = new google.maps.LatLng($scope.lat*1.0, $scope.lng*1.0);
+            map.setCenter(ll);
+        }
+    }
+
+    function traffic() {
+        if (trafficLayer.getMap() === null) {
+            trafficLayer.setMap(map);
+        } else {
+            trafficLayer.setMap(null);
+        }
+    }
+
+    $(function() {
+        initialize();
+        $('#map-canvas').height($(window).height() - $('#form').height());
+
+        $(window).on('resize', function() {
+            $('#map-canvas').height($(window).height() - $('#form').height());
+            google.maps.event.trigger(map, 'resize');
+        });
+    })
+    </script>
+  </head>
+  <body ng-app>
+    <div id="map-canvas"></div>
+    <div ng-controller="mapController" id='form'>
+        <div style='display:none'>
+            <div id='template'>Hello {{name}}, this is {{place}}</div>
+        </div>
+        Name: <input ng-model='name' />
+        Center:
+        Lat: <input ng-model="lat" ng-change='updatemap()'/>
+        Lng: <input ng-model="lng" ng-change='updatemap()' />
+        Zoom: <input ng-model='zoom' ng-change='updatemap()' style='width: 40px' />
+        <button id='traffic' onclick="traffic();" >Traffic</button>
+    </div>
+  </body>
+</html>
