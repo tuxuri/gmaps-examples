@@ -107,21 +107,34 @@
         }
     }
 
-    function traffic() {
-        if (trafficLayer.getMap() === null) {
-            trafficLayer.setMap(map);
-        } else {
-            trafficLayer.setMap(null);
-        }
-    }
-
     $(function() {
+        // This used to be called "onload" or using google maps's event listener
+        // to invoke, but we call it within jquery's canonical onload handler
+        // here instead:
         initialize();
+
+        // This is to show one common way to resizing the map from 100% height
+        // to leave room for a "panel" <div> (in this case, "#form") at the bottom
         $('#map-canvas').height($(window).height() - $('#form').height());
 
+        // We bind this to the window resize as well to make sure the heights
+        // of the map and the form stays the same.
         $(window).on('resize', function() {
             $('#map-canvas').height($(window).height() - $('#form').height());
+
+            // Trigger Google maps to redraw and resize controls where neccessary:
             google.maps.event.trigger(map, 'resize');
+        });
+
+        // Rather than using 'onclick' attribute on the button, we do it jquery style:
+        $('#traffic').click(function() {
+            // Toggle traffic layer on or off.
+            // We have to do this here to make sure that the map layer is initialized
+            if (trafficLayer.getMap() === null) {
+                trafficLayer.setMap(map);
+            } else {
+                trafficLayer.setMap(null);
+            }
         });
     })
     </script>
@@ -129,15 +142,26 @@
   <body ng-app>
     <div id="map-canvas"></div>
     <div ng-controller="mapController" id='form'>
+        <!--
+        We use this template like this because it is much easier to write and
+        test HTML outside of Javascript, and also leverage on AngularJS to
+        bind and display variables, instead of using DOM or Javascript directly
+        to generate the HTML.
+
+        This is wrapped in a hidden <div> to hide it until we need to copy/clone
+        the contents to an Infowindow.
+        -->
         <div style='display:none'>
             <div id='template'>Hello {{name}}, this is {{place}}</div>
         </div>
-        Name: <input ng-model='name' />
+        Name: <input ng-model='name' /><br />
         Center:
         Lat: <input ng-model="lat" ng-change='updatemap()'/>
         Lng: <input ng-model="lng" ng-change='updatemap()' />
         Zoom: <input ng-model='zoom' ng-change='updatemap()' style='width: 40px' />
-        <button id='traffic' onclick="traffic();" >Traffic</button>
+        (You can edit the input boxes to set the parameters directly)
+
+        <button id='traffic'>Traffic</button>
     </div>
   </body>
 </html>
