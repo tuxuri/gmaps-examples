@@ -1,0 +1,58 @@
+<html>
+<head>
+<!--
+    As asked by https://www.facebook.com/groups/jomweb/permalink/550480428356964/
+-->
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Google Maps JavaScript API v3 Example: BusStops</title>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script>
+        var map;
+
+        $(function() {
+            var mapOptions = {
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            }
+            map = new google.maps.Map($('#map-canvas')[0], mapOptions);
+            var bounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(3.153, 101.703),
+                new google.maps.LatLng(3.157, 101.711)
+            );
+            map.fitBounds(bounds);
+
+            var busStops = [];
+            for (var i = 0; i < 6; i++) {
+                var ll = new google.maps.LatLng(
+                      3.153 + (Math.random()) / 200,
+                    101.703 + (Math.random()) / 200
+                );
+                busStops.push({ ll: ll });
+            };
+
+            for (var i in busStops) {
+                busStops[i].marker = new google.maps.Marker({
+                    map: map,
+                    position: busStops[i].ll,
+                    icon: 'busstop.png'
+                });
+            }
+        });
+
+    </script>
+    <style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    #map-canvas {
+        height: 100%;
+    }
+    </style>
+</head>
+<body>
+    <div id="map-canvas"></div>
+</body>
+</html>
